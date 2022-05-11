@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
+from functools import reduce
+import os
 
+'''
 def prep_data(filepaths):
     dfs = [] #initialize a list of pd dataframes
 
@@ -23,14 +26,31 @@ def prep_data(filepaths):
     df_out = df_out.set_index('Date',drop=True)
     
     return df_out.dropna()
+'''
+
+def prep_data(filepaths):
+    dfs = []
+    names = []
+    for i in range(len(filepaths)):
+        d = pd.read_csv(filepaths[i])
+        name = d['Symbol'].iloc[0]
+        names.append(name)
+        d[f'{name}'] = d['Close']
+        dfs.append(d[['Date',f'{name}']])
 
 
+    df_merged = reduce(lambda  left,right: pd.merge(left,right,on=['Date'],how='inner'), dfs)
+    return df_merged
 
 if __name__ == '__main__':
     #set a to be the list of filenames to use
-    a = ['/Users/manuelhanuch/Downloads/crypto_daily_data/coin_Bitcoin.csv'
-    ,'/Users/manuelhanuch/Downloads/crypto_daily_data/coin_WrappedBitcoin.csv']
-    name = 'btc_WrappedBtc'
+    coins = ['data/coin_Bitcoin.csv','data/coin_WrappedBitcoin.csv']
 
-    df = prep_data(a)
-    df.to_csv(name)
+    #get all the coins
+    #coins = os.listdir('/Users/manuelhanuch/Documents/GitHub/crypto_cointegration/data')
+    #coins = ['data/' + i for i in coins ]
+    
+    name = 'btc_wbtc.csv'
+
+    df = prep_data(coins)
+    df.to_csv(name,index=False)
