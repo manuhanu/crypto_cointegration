@@ -73,7 +73,7 @@ summary(btc.wbtc.cajo)
 
 ```
 
-Strange, its telling us there are no cointegrating vectors.
+Strange, its telling us there are no cointegrating vectors. However, I think its worth noting that one of the cointegration vectors that it found is just the difference between the two series. this makes sense, since the nature of the two coins is that they should be exactly equal in value, ie that the differnce between the two series is stationary.
 
 
 ```{r}
@@ -90,7 +90,7 @@ adf.test(as.matrix(btc.wbtc)%*% btc.wbtc.cajo@V[,1])
 kpss.test(as.matrix(btc.wbtc)%*% btc.wbtc.cajo@V[,1])
 ```
 
-These tests agree with eachother. 
+And it is worth noting that the KPSS and ADF test agree that the process is stationary.
 
 
 what if we  try log prices on all of this
@@ -121,6 +121,14 @@ adf.test(as.matrix(l.btc.wbtc)%*% l.btc.wbtc.cajo@V[,1])
 kpss.test(as.matrix(l.btc.wbtc)%*% l.btc.wbtc.cajo@V[,1])
 
 ```
+
+Pretty much the same result. 
+
+
+
+I think on some level, it safe to say that these processes are cointegrated. That said
+
+
 
 
 

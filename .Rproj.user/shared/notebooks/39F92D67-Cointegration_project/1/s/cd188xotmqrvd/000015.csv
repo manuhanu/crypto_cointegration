@@ -1,1 +1,0 @@
-"0","plot(as.Date(date),as.matrix(l.btc.wbtc)%*% l.btc.wbtc.cajo@V[,2],type=""l"",ylab=""second projection"")"
