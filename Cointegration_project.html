@@ -653,8 +653,32 @@ plot(sharpe_ratios,type=&#39;l&#39;, main = &#39;sharpe ratios for different loo
 <pre class="r"><code>print(which.max(sharpe_ratios))</code></pre>
 <pre><code>## [1] 70</code></pre>
 <p>The best sharpe ratio is 1.24 for a lookback period of 70 days</p>
-<p>Our data is only from January 31 2019 - july 7 2021. luckily, there
-is more data available on Yahoo finance</p>
+<p>Our data is only from January 31st 2019 - July 7th 2021. Luckily,
+there is more data available on Yahoo finance for July 8 2021 to today,
+May 16th 2022. Lets test the strategy. lets get 70days prior to that so
+that we can start the lookback period doesnt eat any of our data.</p>
+<pre class="r"><code>btc_test = read.csv(&#39;BTC_USD_recent.csv&#39;)
+wbtc_test = read.csv(&#39;WBTC_USD_recent.csv&#39;)
+
+newdates = as.Date(btc_test$Date,format = &quot;%m/%d/%Y&quot;)
+
+
+testrets = matrix(0, nrow = dim(btilde)[2], ncol = length(Z))
+
+optim_lookback = which.max(sharpe_ratios)
+
+for( i in p:length(Z-1)){
+  
+  shares_btc = -C*sign(sum(Z[i-p:i]))
+  shares_wbtc = C*sign(sum(Z[i-p:i]))
+  
+  #get the next period log return of our position for each asset
+  rets[1,i] = shares_btc * diff(l.btc.wbtc$BTC)[i+1]
+  rets[2,i] = shares_wbtc * diff(l.btc.wbtc$WBTC)[i+1]
+}
+
+#to get the portfoilo return, we can just average the two returns
+port_ret = colMeans(rets)</code></pre>
 
 
 
