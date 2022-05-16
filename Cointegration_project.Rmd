@@ -204,7 +204,7 @@ standard_devs = apply(rets_for_different_p,1,sd,na.rm=TRUE)
 total_returns = apply(rets_for_different_p,1,mean,na.rm=TRUE)
 
 
-sharpe_ratios = sqrt(252)*(total_returns/standard_devs) #252 trading days
+sharpe_ratios = sqrt(365)*(total_returns/standard_devs) #365 since they trade every day
 
 plot(sharpe_ratios,type='l', main = 'sharpe ratios for different lookback periods',xlab='lookback period')
 
@@ -218,43 +218,73 @@ print(sharpe_ratios[which.max(sharpe_ratios)])
 print(which.max(sharpe_ratios))
 ```
 
-The best sharpe ratio is `r signif(sharpe_ratios[which.max(sharpe_ratios)],3)` for a lookback period of `r which.max(sharpe_ratios)` days
+The best sharpe ratio is `r signif(sharpe_ratios[which.max(sharpe_ratios)],3)` for a lookback period of `r which.max(sharpe_ratios)` days. This isn't a horrible sharpe ratio, but it isn't a great one either.
 
 
 
 Our data is only from January 31st 2019 - July 7th 2021. Luckily, there is more data available on Yahoo finance for July 8 2021 to today, May 16th 2022. Lets test the strategy. lets get 70days prior to that so that we can start the lookback period doesnt eat any of our data. 
 
 ```{r}
-btc_test = read.csv('BTC_USD_recent.csv')
-wbtc_test = read.csv('WBTC_USD_recent.csv')
+#we have test data that starts one full lookback period (70 days) before any new data comes in because there will be no trades made before that
+# and so our data doesnt get eaten.
 
+#load data
+btc_test = read.csv('BTC-USD_recent.csv')
+wbtc_test = read.csv('WBTC-USD_recent.csv')
+
+#get dates
 newdates = as.Date(btc_test$Date,format = "%m/%d/%Y")
 
+#bind columns
+test = cbind(btc_test$Close,wbtc_test$Close)
+colnames(test) = c('BTC','WBTC')
 
-testrets = matrix(0, nrow = dim(btilde)[2], ncol = length(Z))
+#get log prices
+log_test = as.data.frame(log(test))
 
-optim_lookback = which.max(sharpe_ratios)
+#get the cointegrated pricess
+Z_test = as.matrix(btilde) %*% t(diff(as.matrix(log_test)))
 
-for( i in p:length(Z-1)){
+
+
+#get optimal lookback
+p_opt = which.max(sharpe_ratios)
+#set up empty matrix
+testrets = matrix(0, nrow = dim(btilde)[2], ncol = length(Z_test))
+
+for( i in p_opt:length(Z_test-1)){
   
-  shares_btc = -C*sign(sum(Z[i-p:i]))
-  shares_wbtc = C*sign(sum(Z[i-p:i]))
+  shares_btc = -C*sign(sum(Z_test[i-p_opt:i]))
+  shares_wbtc = C*sign(sum(Z_test[i-p_opt:i]))
   
   #get the next period log return of our position for each asset
-  rets[1,i] = shares_btc * diff(l.btc.wbtc$BTC)[i+1]
-  rets[2,i] = shares_wbtc * diff(l.btc.wbtc$WBTC)[i+1]
+  
+  testrets[1,i] = shares_btc * diff(log_test$BTC)[i+1]
+  testrets[2,i] = shares_wbtc * diff(log_test$WBTC)[i+1]
 }
 
 #to get the portfoilo return, we can just average the two returns
-port_ret = colMeans(rets)
+test_port_ret = colMeans(testrets)
 
+plot(newdates[-1],cumsum(test_port_ret),type='l',
+     main='log return during out of sample period',
+     ylab = 'log return',
+     xlab = 'date')
 
 ```
 
+Decent performance. log Return of .07.
 
+```{r}
+test_port_ret[test_port_ret==0] = NA
 
+test_sharpe_ratio = sqrt(365)*(mean(test_port_ret,na.rm=TRUE)/sd(test_port_ret,na.rm = TRUE)) #365 trading days
 
+test_sharpe_ratio
 
+```
+
+Not bad!
 
 
 
